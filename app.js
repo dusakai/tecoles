@@ -63,7 +63,7 @@ module.exports = app;
 // HTTP GET, POST, PUT, DELETE
 
 // index.html
-router.route('/') 
+router.route('/')
  .get(function(req, res) {  // GET
    var path = 'index.hatml';
    res.header('Cache-Control', 'no-cache');
@@ -124,7 +124,7 @@ router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
             res.json(response);
          } else if (data == null) {
              response = {"resultado": "aluno inexistente"};
-             res.json(response);   
+             res.json(response);
 	 } else {
 	    response = {"alunos": [data]};
             res.json(response);
@@ -141,12 +141,12 @@ router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
           if(erro) {
             response = {"resultado": "falha de acesso ao DB"};
             res.json(response);
-	  } else if (data == null) { 
+	  } else if (data == null) {
              response = {"resultado": "aluno inexistente"};
-             res.json(response);   
+             res.json(response);
           } else {
              response = {"resultado": "aluno atualizado no BD"};
-             res.json(response);   
+             res.json(response);
 	  }
         }
       )
@@ -159,7 +159,7 @@ router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
          if(erro) {
             response = {"resultado": "falha de acesso ao DB"};
             res.json(response);
-	 } else if (data == null) {	      
+	 } else if (data == null) {
              response = {"resultado": "aluno inexistente"};
              res.json(response);
             } else {
@@ -171,4 +171,65 @@ router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
      }
   );
 
+  // Professores
+  // codigo abaixo adicionado para o processamento das requisições
+  // HTTP GET, POST, PUT, DELETE
 
+  var professores = [];
+
+  router.route('/professores')   // operacoes sobre todos os professores
+    .get(function(req, res) {  // GET
+        if (professores.length == 0) {
+         res.json({"professores": []});
+         return;
+        }
+        var response = '{"professores": [';
+        var professor;
+        for (var i = 0; i < professores.length; i++) {
+           professor = JSON.stringify(professores[i]);   // JSON -> string
+           if (professor != '{}')   // deletado ?
+              response = response + professor + ',';
+        }
+        if (response[response.length-1] == ',')
+           response = response.substr(0, response.length-1);  // remove ultima ,
+        response = response + ']}';  // fecha array
+        res.send(response);
+        }
+     )
+    .post(function(req, res) {   // POST (cria)
+        id = professores.length;
+        professores[id] = req.body;    // armazena em JSON
+        response = {"id": id};
+        res.json(response);
+      }
+   );
+
+  router.route('/professores/:id')   // operacoes sobre um professor (ID)
+    .get(function(req, res) {   // GET
+        response = '{}';
+        id = parseInt(req.params.id);
+        if(professores.length > id)
+          response = JSON.stringify(professores[id]);
+        res.send(response);
+        }
+    )
+    .put(function(req, res) {   // PUT (altera)
+        response = {"updated": "false"};
+        id = parseInt(req.params.id);
+        if(professores.length > id) {
+           professores[id] = req.body;
+           response = {"updated": "true"};
+        }
+        res.json(response);
+      }
+    )
+    .delete(function(req, res) {   // DELETE (remove)
+        response = {"deleted": "false"};
+        id = parseInt(req.params.id);
+        if(professores.length > id && JSON.stringify(professores[id]) != '{}') {
+           professores[id] = {};
+           response = {"deleted": "true"};
+        }
+        res.json(response);
+      }
+    );
