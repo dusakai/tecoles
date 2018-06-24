@@ -27,10 +27,6 @@ npm install cookie-parser --save
 npm install serve-favicon --save
 npm install mongoose --save
 npm install -g express-generator
-
-somente para mim
-export PATH=$PATH:/usr/local/nodejs/bin
-
 ```
 
 ## Executando o programa
@@ -47,7 +43,7 @@ npm start
 E acesse o endereço:
 
 ```
-http://localhost:3000
+http://localhost:3000/mr.html
 ```
 
 ## Referências
