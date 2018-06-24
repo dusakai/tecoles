@@ -8,7 +8,8 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 // adicione "ponteiro" para o MongoDB
-var mongoOp = require('./models/mongo');
+var mongoOp = require('./models/alunos');
+var mongoProfessorOp = require('./models/professores');
 
 // comente as duas linhas abaixo
 // var index = require('./routes/index');
@@ -24,7 +25,7 @@ app.set('view engine', 'jade');
 app.use('/', express.static(__dirname + '/'));
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(favicon(path.join(__dirname, 'public', 'images/favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({"extended" : false }));
@@ -175,61 +176,102 @@ router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
   // codigo abaixo adicionado para o processamento das requisições
   // HTTP GET, POST, PUT, DELETE
 
-  var professores = [];
-
-  router.route('/professores')   // operacoes sobre todos os professores
-    .get(function(req, res) {  // GET
-        if (professores.length == 0) {
-         res.json({"professores": []});
-         return;
-        }
-        var response = '{"professores": [';
-        var professor;
-        for (var i = 0; i < professores.length; i++) {
-           professor = JSON.stringify(professores[i]);   // JSON -> string
-           if (professor != '{}')   // deletado ?
-              response = response + professor + ',';
-        }
-        if (response[response.length-1] == ',')
-           response = response.substr(0, response.length-1);  // remove ultima ,
-        response = response + ']}';  // fecha array
-        res.send(response);
-        }
-     )
-    .post(function(req, res) {   // POST (cria)
-        id = professores.length;
-        professores[id] = req.body;    // armazena em JSON
-        response = {"id": id};
-        res.json(response);
+  router.route('/professores')   // operacoes sobre todos os alunos
+   .get(function(req, res) {  // GET
+       var response = {};
+       mongoProfessorOp.find({}, function(erro, data) {
+         if(erro)
+            response = {"resultado": "falha de acesso ao BD"};
+          else
+            response = {"professores": data};
+            res.json(response);
+          }
+        )
       }
-   );
+    )
+    .post(function(req, res) {   // POST (cria)
+       console.log(JSON.stringify(req.body));
+       var query = {"matricula": req.body.matricula};
+       var response = {};
+       mongoProfessorOp.findOne(query, function(erro, data) {
+          if (data == null) {
+             var db = new mongoProfessorOp();
+             db.matricula = req.body.matricula;
+             db.nome = req.body.nome;
+             db.curso = req.body.curso;
+             db.save(function(erro) {
+               if(erro) {
+                   response = {"resultado": "falha de insercao no BD"};
+                   res.json(response);
+               } else {
+                   response = {"resultado": "professor inserido no BD"};
+                   res.json(response);
+                }
+              }
+            )
+          } else {
+  	    response = {"resultado": "professor ja existente"};
+              res.json(response);
+            }
+          }
+        )
+      }
+    );
 
-  router.route('/professores/:id')   // operacoes sobre um professor (ID)
+
+  router.route('/professores/:matricula')   // operacoes sobre um aluno (RA)
     .get(function(req, res) {   // GET
-        response = '{}';
-        id = parseInt(req.params.id);
-        if(professores.length > id)
-          response = JSON.stringify(professores[id]);
-        res.send(response);
-        }
+        var response = {};
+        var query = {"matricula": req.params.matricula};
+        mongoProfessorOp.findOne(query, function(erro, data) {
+           if(erro) {
+              response = {"resultado": "falha de acesso ao BD"};
+              res.json(response);
+           } else if (data == null) {
+               response = {"resultado": "professor inexistente"};
+               res.json(response);
+  	 } else {
+  	    response = {"professores": [data]};
+              res.json(response);
+             }
+          }
+        )
+      }
     )
     .put(function(req, res) {   // PUT (altera)
-        response = {"updated": "false"};
-        id = parseInt(req.params.id);
-        if(professores.length > id) {
-           professores[id] = req.body;
-           response = {"updated": "true"};
-        }
-        res.json(response);
+        var response = {};
+        var query = {"matricula": req.params.matricula};
+        var data = {"nome": req.body.nome, "curso": req.body.curso};
+        mongoProfessorOp.findOneAndUpdate(query, data, function(erro, data) {
+            if(erro) {
+              response = {"resultado": "falha de acesso ao DB"};
+              res.json(response);
+  	  } else if (data == null) {
+               response = {"resultado": "professor inexistente"};
+               res.json(response);
+            } else {
+               response = {"resultado": "professor atualizado no BD"};
+               res.json(response);
+  	  }
+          }
+        )
       }
     )
     .delete(function(req, res) {   // DELETE (remove)
-        response = {"deleted": "false"};
-        id = parseInt(req.params.id);
-        if(professores.length > id && JSON.stringify(professores[id]) != '{}') {
-           professores[id] = {};
-           response = {"deleted": "true"};
-        }
-        res.json(response);
-      }
+       var response = {};
+       var query = {"matricula": req.params.matricula};
+        mongoProfessorOp.findOneAndRemove(query, function(erro, data) {
+           if(erro) {
+              response = {"resultado": "falha de acesso ao DB"};
+              res.json(response);
+  	 } else if (data == null) {
+               response = {"resultado": "matricula inexistente"};
+               res.json(response);
+              } else {
+                response = {"resultado": "matricula removido do BD"};
+                res.json(response);
+  	   }
+           }
+         )
+       }
     );

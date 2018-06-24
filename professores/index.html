@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<body>
+
+<h1>Cadastro de Professores</h1>
+
+<br>
+
+<div ng-app="myApp" ng-controller="myCtrl">
+  <form>
+    <button ng-click="doLogin()">LOGIN</button>&nbsp;&nbsp;
+    <button ng-click="doLogout()">LOGOUT</button><br><br>
+    Matricula: <input type="text" ng-model="matricula"><br><br>
+    Nome: <input type="text" ng-model="nome"><br><br>
+    Curso: <input type="text" ng-model="curso"><br><br>
+    <button ng-click="acessa()">ACESSA</button> &nbsp;
+    <button ng-click="insere()">INSERE</button> &nbsp;
+    <button ng-click="atualiza()">ATUALIZA</button> &nbsp;
+    <button ng-click="remove()">REMOVE</button> &nbsp;
+  </form>
+
+  <br><br>
+  Resultado: {{mensagem}}
+
+  <br><br>
+  <table cellspacing="8">
+    <tr> <th>{{hmatricula}}</th>  <th>{{hnome}}</th>  <th>{{hcurso}}</th> </tr>
+    <tr ng-repeat="x in professores">
+      <td>{{ x.matricula }}</td>
+      <td>{{ x.nome }}</td>
+      <td>{{ x.curso }}</td>
+    </tr>
+  </table>
+
+</div>
+
+
+<script>
+var app = angular.module('myApp', []);
+app.controller('myCtrl', function($scope, $http) {
+  // LOGIN
+  $scope.doLogin = function() {
+     window.open("/authentication", "_blank");
+  }
+
+  // LOGOUT
+  $scope.doLogout = function() {
+     $scope.clear();
+     var request = $http({
+                 "method": "delete",
+                 "url": "/authentication"});
+     request.success(function(reply) {
+         $scope.mensagem = reply.resultado;
+     }
+   );
+ };
+
+
+  // ACESSA
+  $scope.acessa = function() {
+     var url = "/professores";
+     if ($scope.matricula != undefined) url = "/professores/" + $scope.matricula;
+     var request = $http({
+                 "method": "get",
+                 "url": url});
+     request.success(function(reply) {
+        if(reply.professores != null) {
+          $scope.hmatricula = "Matricula";
+          $scope.hnome = "Professor";
+          $scope.hcurso = "Curso";
+          $scope.mensagem = "";
+          $scope.professores = reply.professores;
+          } else {
+              $scope.clear();
+              $scope.mensagem = reply.resultado;
+            }
+         }
+      );
+      request.error(function(reply) {
+         alert("Falha na requisicao");
+      }
+    );
+  };
+
+  // INSERE
+  $scope.insere = function() {
+      $scope.clear();
+      if ($scope.matricula == undefined || $scope.matricula.length == 0 ||
+          $scope.nome == undefined || $scope.nome.length == 0 ||
+          $scope.curso == undefined || $scope.curso.length == 0) {
+             $scope.clear();
+             $scope.mensagem = "preencha todos os campos acima";
+             return;
+      }
+      var data = {"matricula": $scope.matricula,
+                  "nome": $scope.nome,
+                  "curso": $scope.curso};
+      var request = $http({
+                 "method": "post",
+                 "url": "/professores",
+                 "data": data});
+      request.success(function(reply) {
+        $scope.mensagem = reply.resultado;
+        }
+      );
+      request.error(function(reply) {
+        alert("Falha na requisicao");
+      }
+    );
+  };
+
+  // ATUALIZA
+  $scope.atualiza = function() {
+     $scope.clear();
+     if (($scope.matricula == undefined || $scope.matricula.length == 0) ||
+         ($scope.nome == undefined || $scope.nome.length == 0) &&
+         ($scope.curso == undefined || $scope.curso.length == 0)) {
+             $scope.clear();
+             $scope.mensagem = "preencha a matricula e pelo menos um campo acima";
+             return;
+     }
+     var data = {"matricula": $scope.matricula,
+                 "nome": $scope.nome,
+                 "curso": $scope.curso};
+     var request = $http({
+                 "method": "put",
+                 "url": "/professores/" + $scope.matricula,
+                 "data": data});
+     request.success(function(reply) {
+         $scope.mensagem = reply.resultado;
+         }
+      );
+      request.error(function(reply) {
+        alert("Falha na requisicao");
+       }
+    );
+  };
+
+  // REMOVE
+  $scope.remove = function() {
+     $scope.clear();
+     if ($scope.matricula == undefined || $scope.matricula.length == 0) {
+         $scope.clear();
+         $scope.mensagem = "preencha a matricula do professor";
+         return;
+     }
+     var request = $http({
+                 "method": "delete",
+                 "url": "/professores/" + $scope.matricula});
+     request.success(function(reply) {
+         $scope.mensagem = reply.resultado;
+       }
+     );
+     request.error(function(reply) {
+        alert("Falha na requisicao");
+       }
+     );
+   };
+
+  // CLEAR
+  $scope.clear = function() {
+    $scope.professores = [];
+    $scope.mensagem = "";
+    $scope.hmatricula = $scope.hnome = $scope.hcurso = "";
+    }
+  }
+);
+</script>
+
+</body>
+</html>
