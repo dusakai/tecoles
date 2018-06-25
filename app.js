@@ -16,6 +16,10 @@ var mongoQuestaoOp = require('./models/questoes');
 // var index = require('./routes/index');
 // var users = require('./routes/users');
 
+var multer = require("multer")
+var upload = multer({ dest: "public/file/uploads" })
+
+
 var app = express();
 
 // view engine setup
@@ -31,7 +35,8 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({"extended" : false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'uploads')));
+// app.use(express.static('public'));
 
 // adicione as duas linhas abaixo
 var router = express.Router();
@@ -61,13 +66,31 @@ app.use(function(err, req, res, next) {
 
 module.exports = app;
 
+
+// var storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, 'uploads/')
+//     },
+//     filename: function (req, file, cb) {
+//         cb(null, file.originalname);
+//     }
+// });
+
+// utiliza a storage para configurar a instância do multer
+router.route("/public")
+    /* replace foo-bar with your form field-name */
+    .post(upload.single("file"), function(req, res){
+       res.send('<h2>Upload realizado com sucesso</h2>');
+    })
+
+
 // codigo abaixo adicionado para o processamento das requisições
 // HTTP GET, POST, PUT, DELETE
 
 // index.html
 router.route('/')
  .get(function(req, res) {  // GET
-   var path = 'index.hatml';
+   var path = 'index.html';
    res.header('Cache-Control', 'no-cache');
    res.sendfile(path, {"root": "./"});
    }
