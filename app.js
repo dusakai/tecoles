@@ -8,8 +8,9 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 // adicione "ponteiro" para o MongoDB
-var mongoOp = require('./models/alunos');
+var mongoAlunoOp = require('./models/alunos');
 var mongoProfessorOp = require('./models/professores');
+var mongoQuestaoOp = require('./models/questoes');
 
 // comente as duas linhas abaixo
 // var index = require('./routes/index');
@@ -75,7 +76,7 @@ router.route('/')
 router.route('/alunos')   // operacoes sobre todos os alunos
  .get(function(req, res) {  // GET
      var response = {};
-     mongoOp.find({}, function(erro, data) {
+     mongoAlunoOp.find({}, function(erro, data) {
        if(erro)
           response = {"resultado": "Falha de acesso ao BD"};
         else
@@ -89,9 +90,9 @@ router.route('/alunos')   // operacoes sobre todos os alunos
      console.log(JSON.stringify(req.body));
      var query = {"ra": req.body.ra};
      var response = {};
-     mongoOp.findOne(query, function(erro, data) {
+     mongoAlunoOp.findOne(query, function(erro, data) {
         if (data == null) {
-           var db = new mongoOp();
+           var db = new mongoAlunoOp();
            db.ra = req.body.ra;
            db.nome = req.body.nome;
            db.curso = req.body.curso;
@@ -119,7 +120,7 @@ router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
   .get(function(req, res) {   // GET
       var response = {};
       var query = {"ra": req.params.ra};
-      mongoOp.findOne(query, function(erro, data) {
+      mongoAlunoOp.findOne(query, function(erro, data) {
          if(erro) {
             response = {"resultado": "falha de acesso ao BD"};
             res.json(response);
@@ -138,7 +139,7 @@ router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
       var response = {};
       var query = {"ra": req.params.ra};
       var data = {"nome": req.body.nome, "curso": req.body.curso};
-      mongoOp.findOneAndUpdate(query, data, function(erro, data) {
+      mongoAlunoOp.findOneAndUpdate(query, data, function(erro, data) {
           if(erro) {
             response = {"resultado": "falha de acesso ao DB"};
             res.json(response);
@@ -156,7 +157,7 @@ router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
   .delete(function(req, res) {   // DELETE (remove)
      var response = {};
      var query = {"ra": req.params.ra};
-      mongoOp.findOneAndRemove(query, function(erro, data) {
+      mongoAlunoOp.findOneAndRemove(query, function(erro, data) {
          if(erro) {
             response = {"resultado": "falha de acesso ao DB"};
             res.json(response);
@@ -275,3 +276,104 @@ router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
          )
        }
     );
+
+    // questoes
+    router.route('/questoes')   // operacoes sobre todos os questoes
+     .get(function(req, res) {  // GET
+         var response = {};
+         mongoQuestaoOp.find({}, function(erro, data) {
+           if(erro)
+              response = {"resultado": "Falha de acesso ao BD"};
+            else
+              response = {"questoes": data};
+              res.json(response);
+            }
+          )
+        }
+      )
+      .post(function(req, res) {   // POST (cria)
+         console.log(JSON.stringify(req.body));
+         var query = {"codigo": req.body.codigo};
+         var response = {};
+         mongoQuestaoOp.findOne(query, function(erro, data) {
+            if (data == null) {
+               var db = new mongoQuestaoOp();
+               db.codigo = req.body.codigo;
+               db.resposta = req.body.resposta;
+               db.filename = req.body.filename;
+               db.save(function(erro) {
+                 if(erro) {
+                     response = {"resultado": "Falha de insercao no BD"};
+                     res.json(response);
+                 } else {
+                     response = {"resultado": "Questao inserida no BD"};
+                     res.json(response);
+                  }
+                }
+              )
+            } else {
+         response = {"resultado": "Questao ja existente"};
+                res.json(response);
+              }
+            }
+          )
+        }
+      );
+
+
+    router.route('/questoes/:codigo')   // operacoes sobre um aluno (RA)
+      .get(function(req, res) {   // GET
+          var response = {};
+          var query = {"codigo": req.params.codigo};
+          mongoQuestaoOp.findOne(query, function(erro, data) {
+             if(erro) {
+                response = {"resultado": "falha de acesso ao BD"};
+                res.json(response);
+             } else if (data == null) {
+                 response = {"resultado": "questao inexistente"};
+                 res.json(response);
+      } else {
+         response = {"questoes": [data]};
+                res.json(response);
+               }
+            }
+          )
+        }
+      )
+      .put(function(req, res) {   // PUT (altera)
+          var response = {};
+          var query = {"codigo": req.params.codigo};
+          var data = {"resposta": req.body.resposta, "filename": req.body.curso};
+          mongoQuestaoOp.findOneAndUpdate(query, data, function(erro, data) {
+              if(erro) {
+                response = {"resultado": "falha de acesso ao DB"};
+                res.json(response);
+       } else if (data == null) {
+                 response = {"resultado": "questao inexistente"};
+                 res.json(response);
+              } else {
+                 response = {"resultado": "questao atualizado no BD"};
+                 res.json(response);
+       }
+            }
+          )
+        }
+      )
+      .delete(function(req, res) {   // DELETE (remove)
+         var response = {};
+         var query = {"codigo": req.params.codigo};
+          mongoQuestaoOp.findOneAndRemove(query, function(erro, data) {
+             if(erro) {
+                response = {"resultado": "falha de acesso ao DB"};
+                res.json(response);
+      } else if (data == null) {
+                 response = {"resultado": "questao inexistente"};
+                 res.json(response);
+                } else {
+                  response = {"resultado": "questao removido do BD"};
+                  res.json(response);
+        }
+             }
+           )
+         }
+      );

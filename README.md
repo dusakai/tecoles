@@ -27,6 +27,7 @@ npm install cookie-parser --save
 npm install serve-favicon --save
 npm install mongoose --save
 npm install -g express-generator
+npm install multer --save
 
 somente para mim
 export PATH=$PATH:/usr/local/nodejs/bin
